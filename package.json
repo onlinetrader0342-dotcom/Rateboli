@@ -1,0 +1,1 @@
+{"dependencies":{"express":"^4.21.2","socket.io":"^4.8.1"},"description":"Blind bidding app: shopkeeper demands, suppliers ki chhupi hui boliyan, sab se kam rate shopkeeper ko","license":"MIT","main":"server.js","name":"rateboli","scripts":{"start":"node server.js"},"version":"1.0.0"}
