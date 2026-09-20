@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RateBoli</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+
+  <!-- Login / Register -->
+  <div id="screen-auth" class="screen">
+    <div class="card auth-card">
+      <h1 class="logo">RateBoli</h1>
+      <p class="tagline">Demand bhejein, andhi boli lagayein — sab se kam rate jeetay.</p>
+      <div class="tabs">
+        <button id="tab-login" class="tab active">Login</button>
+        <button id="tab-register" class="tab">Naya Account</button>
+      </div>
+      <div id="pane-login">
+        <label>Phone Number
+          <input id="login-phone" inputmode="numeric" placeholder="03XXXXXXXXX">
+        </label>
+        <button id="btn-login" class="btn primary">Login</button>
+      </div>
+      <div id="pane-register" class="hidden">
+        <label>Naam
+          <input id="reg-name" placeholder="Apna naam likhein">
+        </label>
+        <label>Phone Number
+          <input id="reg-phone" inputmode="numeric" placeholder="03XXXXXXXXX">
+        </label>
+        <button id="btn-register" class="btn primary">Account Banayein</button>
+      </div>
+      <p id="auth-err" class="err"></p>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="screen-main" class="screen hidden">
+    <header>
+      <span class="logo-sm">RateBoli</span>
+      <span id="user-chip" class="chip"></span>
+      <button id="btn-bell" class="icon-btn" title="Notifications">🔔<span id="bell-badge" class="badge hidden"></span></button>
+      <button id="btn-logout" class="icon-btn" title="Logout">⏻</button>
+    </header>
+    <main id="main-content"></main>
+  </div>
+
+  <!-- Demand detail -->
+  <div id="screen-detail" class="screen hidden">
+    <header>
+      <button id="btn-back" class="icon-btn">←</button>
+      <span class="logo-sm">Demand Detail</span>
+      <span></span>
+    </header>
+    <main id="detail-content"></main>
+  </div>
+
+  <!-- Notifications panel -->
+  <div id="panel-notif" class="panel hidden">
+    <div class="panel-head">
+      <b>Notifications</b>
+      <button id="btn-notif-read" class="link">Sab parh liya</button>
+      <button id="btn-notif-close" class="icon-btn">✕</button>
+    </div>
+    <div id="notif-list"></div>
+  </div>
+
+  <div id="toasts"></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
