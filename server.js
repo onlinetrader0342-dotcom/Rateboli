@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   phone TEXT UNIQUE NOT NULL,
+  location TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
   role TEXT NOT NULL DEFAULT 'member',
   token TEXT UNIQUE NOT NULL,
   created_at TEXT NOT NULL
@@ -79,6 +81,13 @@ try {
   }
 } catch (e) { console.log('Migration note:', e.message); }
 
+// Purani DB me location/email columns add karo (agar na hon)
+try {
+  const cols = db.prepare('PRAGMA table_info(users)').all().map(c => c.name);
+  if (!cols.includes('location')) db.exec("ALTER TABLE users ADD COLUMN location TEXT NOT NULL DEFAULT ''");
+  if (!cols.includes('email')) db.exec("ALTER TABLE users ADD COLUMN email TEXT NOT NULL DEFAULT ''");
+} catch (e) { console.log('Migration note:', e.message); }
+
 // Demands mein deadline/image columns (purani DBs ke liye)
 try {
   const cols = db.prepare('PRAGMA table_info(demands)').all().map(c => c.name);
@@ -123,7 +132,7 @@ function auth(req, res, next) {
   const h = req.headers.authorization || '';
   const token = h.startsWith('Bearer ') ? h.slice(7) : null;
   if (!token) return res.status(401).json({ error: 'Login zaroori hai' });
-  const user = db.prepare('SELECT id, name, phone, role FROM users WHERE token = ?').get(token);
+  const user = db.prepare('SELECT id, name, phone, location, email, role FROM users WHERE token = ?').get(token);
   if (!user) return res.status(401).json({ error: 'Session khatam ho gaya, dobara login karein' });
   req.user = user;
   next();
@@ -132,15 +141,19 @@ function auth(req, res, next) {
 
 // ---------- Account ----------
 app.post('/api/register', (req, res) => {
-  const { name, phone } = req.body || {};
+  const { name, phone, location, email } = req.body || {};
   if (!name || !String(name).trim()) return res.status(400).json({ error: 'Apna naam likhein' });
   const ph = String(phone || '').replace(/\D/g, '');
   if (ph.length < 10 || ph.length > 13) return res.status(400).json({ error: 'Durust phone number likhein' });
+  const loc = String(location || '').trim();
+  if (!loc) return res.status(400).json({ error: 'Apna sheher/ilaaqa likhein' });
+  const em = String(email || '').trim();
+  if (em && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return res.status(400).json({ error: 'Durust email likhein (ya khaali chhorein)' });
   try {
-    const u = { id: uid(), name: String(name).trim(), phone: ph, role: 'member', token: uid() + uid(), created_at: now() };
-    db.prepare('INSERT INTO users (id,name,phone,role,token,created_at) VALUES (?,?,?,?,?,?)')
-      .run(u.id, u.name, u.phone, u.role, u.token, u.created_at);
-    res.json({ user: { id: u.id, name: u.name, phone: u.phone, role: u.role }, token: u.token });
+    const u = { id: uid(), name: String(name).trim(), phone: ph, location: loc, email: em, role: 'member', token: uid() + uid(), created_at: now() };
+    db.prepare('INSERT INTO users (id,name,phone,location,email,role,token,created_at) VALUES (?,?,?,?,?,?,?,?)')
+      .run(u.id, u.name, u.phone, u.location, u.email, u.role, u.token, u.created_at);
+    res.json({ user: { id: u.id, name: u.name, phone: u.phone, location: u.location, email: u.email, role: u.role }, token: u.token });
   } catch (e) {
     if (String(e.message).includes('UNIQUE'))
       return res.status(400).json({ error: 'Ye number pehle se registered hai — login karein' });
@@ -150,9 +163,9 @@ app.post('/api/register', (req, res) => {
 
 app.post('/api/login', (req, res) => {
   const ph = String((req.body || {}).phone || '').replace(/\D/g, '');
-  const row = db.prepare('SELECT id, name, phone, role, token FROM users WHERE phone = ?').get(ph);
+  const row = db.prepare('SELECT id, name, phone, location, email, role, token FROM users WHERE phone = ?').get(ph);
   if (!row) return res.status(404).json({ error: 'Ye number registered nahi — pehle account banayein' });
-  res.json({ user: { id: row.id, name: row.name, phone: row.phone, role: row.role }, token: row.token });
+  res.json({ user: { id: row.id, name: row.name, phone: row.phone, location: row.location, email: row.email, role: row.role }, token: row.token });
 });
 
 app.get('/api/me', auth, (req, res) => res.json({ user: req.user }));
@@ -166,11 +179,11 @@ function demandSummary(d, user) {
   if (out.is_mine) {
     // Demand banane wale ko SIRF sab se kam boli nazar aati hai
     const low = db.prepare(
-      `SELECT b.rate, b.supplier_name, u.phone AS supplier_phone
+      `SELECT b.rate, b.supplier_name, u.phone AS supplier_phone, u.location AS supplier_location
        FROM bids b JOIN users u ON u.id = b.supplier_id
        WHERE b.demand_id = ? ORDER BY b.rate ASC, b.created_at ASC LIMIT 1`
     ).get(d.id);
-    out.lowest = low ? { rate: low.rate, supplier_name: low.supplier_name, supplier_phone: low.supplier_phone } : null;
+    out.lowest = low ? { rate: low.rate, supplier_name: low.supplier_name, supplier_phone: low.supplier_phone, supplier_location: low.supplier_location } : null;
   }
   const mine = db.prepare('SELECT rate FROM bids WHERE demand_id = ? AND supplier_id = ?').get(d.id, user.id);
   out.my_rate = mine ? mine.rate : null; // apni boli nazar aati hai, doosron ki nahi
