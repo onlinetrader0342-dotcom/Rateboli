@@ -24,6 +24,7 @@ body {
 h2 { font-size: 17px; margin: 18px 4px 10px; }
 
 label { display: block; font-size: 13px; color: #41544c; margin: 10px 0 2px; font-weight: 600; }
+.opt { font-weight: 400; color: #8a9a93; font-size: 12px; }
 input {
   width: 100%; padding: 11px 12px; margin-top: 4px;
   border: 1.5px solid #cfdbd6; border-radius: 10px; font-size: 16px;
