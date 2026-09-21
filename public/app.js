@@ -71,6 +71,7 @@ function initAuth() {
     try {
       const { user, token } = await api('/api/register', 'POST', {
         name: $('reg-name').value, phone: $('reg-phone').value,
+        location: $('reg-location').value, email: $('reg-email').value,
       });
       saveSession(user, token);
     } catch (e) { $('auth-err').textContent = e.message; }
@@ -271,7 +272,7 @@ async function openDetail(id) {
           <div class="big">Rs ${fmt(d.lowest.rate)} <span class="muted" style="font-size:14px">/ ${esc(d.unit || 'unit')}</span></div>
           <div style="margin-top:6px">Kul qeemat: <b>Rs ${fmt(d.lowest.rate * d.quantity)}</b>
             <span class="muted">(${fmt(d.quantity)}${d.unit ? ' ' + esc(d.unit) : ''})</span></div>
-          <div style="margin-top:10px">Supplier: <b>${esc(d.lowest.supplier_name)}</b></div>
+          <div style="margin-top:10px">Supplier: <b>${esc(d.lowest.supplier_name)}</b>${d.lowest.supplier_location ? ` <span class="muted">(${esc(d.lowest.supplier_location)})</span>` : ''}</div>
           <a class="phone-link" href="tel:${esc(d.lowest.supplier_phone)}">📞 ${esc(d.lowest.supplier_phone)} par call karein</a>
         </div>`;
       } else {
